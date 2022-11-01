@@ -25,12 +25,40 @@ except ServoTimeoutError as e:
     quit()
 
 start_angle = 40
-init_angles = [32, 230, 232, 40, 20, 205]
+init_angles = np.array([32, 230, 232, 40, 20, 205])
+
+servo_list = [servo1, servo2, servo3, servo4, servo5, servo6]
 
 class bipedal():
-    def __init__(self, init_a):
-        self.curr = init_a
-        ##  to do
+    def __init__(self, init_a, center_height):
+        self.init_angle = init_a
+        self.curr_angle = init_a
+        self.c_height = center_height
+
+    # def direct_move_six(self, new_a):
+    #     for i in range(6):
+    #         servo_list[i].move(new_a[i])
+
+    #     self.curr_angle = new_a
+
+    def boot(self):
+        target_a = []
+        for i in range(6):
+            target_a.append(self.init_angle[i] + self.c_height[i])
+        self.sin_move_six(target_a, 20)
+        print("boot")
+
+    def sin_move_six(self, new_a, num_steps):
+        for step in range(num_steps + 1):
+            for i in range(6):
+                servo_list[i].move((new_a[i] - self.curr_angle[i]) * (1-np.cos(step * np.pi / num_steps)) / 2 + self.curr_angle[i])
+                time.sleep(0.01)
+
+        self.curr_angle = new_a
+
+    def home(self):
+        self.sin_move_six(self.init_angle, 20)
+        print("home")
 
 def move_steps(step_len, steps, height):
     t = 0
@@ -48,26 +76,27 @@ def move_steps(step_len, steps, height):
 
         print(t)
 
-def start_pos(angle_list):
-    servo1.move(angle_list[0])
-    servo2.move(angle_list[1])
-    servo3.move(angle_list[2])
-    servo4.move(angle_list[3])
-    servo5.move(angle_list[4])
-    servo6.move(angle_list[5])
-
 
 if __name__ == "__main__":
     time.sleep(5)
+    # move_steps(step_len=0, steps=10, height=5)
+    # move_steps(step_len=1, steps=10, height=8)
+    # move_steps(step_len=2, steps=10, height=10)
+    # move_steps(step_len=3, steps=10, height=10)
+    # move_steps(step_len=4, steps=50, height=10)
+    # move_steps(step_len=2, steps=10, height=10)
+
+    h = 10
+    c_h = 30
+    init_add_height = np.array([32 + h, 230 - h, 232 - h, 40 + h, 20 + h, 205 - h])
+    height_list = np.array([c_h, -c_h, -c_h, c_h, c_h, -c_h])
+    my_biped = bipedal(init_a=init_add_height, center_height=height_list)
+    my_biped.boot()
+    
     move_steps(step_len=0, steps=10, height=5)
     move_steps(step_len=1, steps=10, height=8)
-    move_steps(step_len=2, steps=10, height=10)
-    move_steps(step_len=3, steps=10, height=10)
-    move_steps(step_len=4, steps=50, height=10)
-    move_steps(step_len=2, steps=10, height=10)
-    
-    # start_pos(init_angles)
-    print("done")
+
+    my_biped.home()
 
 
 
