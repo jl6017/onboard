@@ -57,7 +57,7 @@ class bipedal():
         self.sin_move_six(self.init_angle, 20)
         print("home")
 
-def move_steps(robot step_len, steps, height):
+def move_steps(robot, step_len, steps, height):
     t = 0
     up_angle = start_angle-height
     while t<16*steps:
@@ -73,9 +73,19 @@ def move_steps(robot step_len, steps, height):
         time.sleep(0.01)
         t += 1
 
+    end_pos = [
+        init_angles[0] + (start_angle + up_angle)/2,
+        init_angles[1] - (start_angle + up_angle)/2,
+        init_angles[2] - (start_angle + up_angle)/2,
+        init_angles[3] + (start_angle + up_angle)/2,
+        init_angles[4] + (start_angle + up_angle)/2,
+        init_angles[5] - (start_angle + up_angle)/2,
+    ]
+    # robot.sin_move_six(end_pos, 1)
+    robot.direct_move_six(end_pos)
+
 
 if __name__ == "__main__":
-    time.sleep(5)
     # move_steps(step_len=0, steps=10, height=5)
     # move_steps(step_len=1, steps=10, height=8)
     # move_steps(step_len=2, steps=10, height=10)
@@ -89,12 +99,15 @@ if __name__ == "__main__":
     init_angles = np.array([32, 230, 232, 40, 20, 205])
     init_add_height = np.array([32 + h, 230 - h, 232 - h, 40 + h, 20 + h, 205 - h])
     height_list = np.array([c_h, -c_h, -c_h, c_h, c_h, -c_h])
-    
+
     my_biped = bipedal(init_a=init_add_height, center_height=height_list)
     my_biped.boot()
     
     move_steps(robot=my_biped, step_len=0, steps=10, height=5)
-    move_steps(robot=my_biped, step_len=1, steps=10, height=8)
+    move_steps(robot=my_biped, step_len=1, steps=10, height=10)
+    move_steps(robot=my_biped, step_len=3, steps=20, height=15)
+    move_steps(robot=my_biped, step_len=1, steps=10, height=10)
+    move_steps(robot=my_biped, step_len=0, steps=10, height=5)
 
     my_biped.home()
 
