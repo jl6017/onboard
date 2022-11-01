@@ -24,9 +24,6 @@ except ServoTimeoutError as e:
     print("Servo {e.id_} is not responding. Exiting...")
     quit()
 
-start_angle = 40
-init_angles = np.array([32, 230, 232, 40, 20, 205])
-
 servo_list = [servo1, servo2, servo3, servo4, servo5, servo6]
 
 class bipedal():
@@ -35,11 +32,11 @@ class bipedal():
         self.curr_angle = init_a
         self.c_height = center_height
 
-    # def direct_move_six(self, new_a):
-    #     for i in range(6):
-    #         servo_list[i].move(new_a[i])
+    def direct_move_six(self, new_a):
+        for i in range(6):
+            servo_list[i].move(new_a[i])
 
-    #     self.curr_angle = new_a
+        self.curr_angle = new_a
 
     def boot(self):
         target_a = []
@@ -60,21 +57,21 @@ class bipedal():
         self.sin_move_six(self.init_angle, 20)
         print("home")
 
-def move_steps(step_len, steps, height):
+def move_steps(robot step_len, steps, height):
     t = 0
     up_angle = start_angle-height
     while t<16*steps:
-        servo1.move(sin(t * np.pi / 16) * step_len + init_angles[0] + (start_angle - up_angle)/2 * cos(t * np.pi / 16) + (start_angle + up_angle)/2)
-        servo2.move(sin(t * np.pi / 16) * 0 + init_angles[1] - (start_angle - up_angle)/2 * cos(t * np.pi / 16) - (start_angle + up_angle)/2)
-        servo3.move(sin(t * np.pi / 16) * step_len + init_angles[2] - (start_angle - up_angle)/2 * cos(t * np.pi / 16) - (start_angle + up_angle)/2)
-
-        servo4.move(sin(t * np.pi / 16) * step_len + init_angles[3] - (start_angle - up_angle)/2 * cos(t * np.pi / 16) + (start_angle + up_angle)/2)
-        servo5.move(sin(t * np.pi / 16) * 0 + init_angles[4] - (start_angle - up_angle)/2 * cos(t * np.pi / 16) + (start_angle + up_angle)/2)
-        servo6.move(sin(t * np.pi / 16) * step_len + init_angles[5] + (start_angle - up_angle)/2 * cos(t * np.pi / 16) - (start_angle + up_angle)/2)
+        angle_list = [
+            sin(t * np.pi / 16) * step_len + init_angles[0] + (start_angle - up_angle)/2 * cos(t * np.pi / 16) + (start_angle + up_angle)/2,
+            sin(t * np.pi / 16) * 0 + init_angles[1] - (start_angle - up_angle)/2 * cos(t * np.pi / 16) - (start_angle + up_angle)/2,
+            sin(t * np.pi / 16) * step_len + init_angles[2] - (start_angle - up_angle)/2 * cos(t * np.pi / 16) - (start_angle + up_angle)/2,
+            sin(t * np.pi / 16) * step_len + init_angles[3] - (start_angle - up_angle)/2 * cos(t * np.pi / 16) + (start_angle + up_angle)/2,
+            sin(t * np.pi / 16) * 0 + init_angles[4] - (start_angle - up_angle)/2 * cos(t * np.pi / 16) + (start_angle + up_angle)/2,
+            sin(t * np.pi / 16) * step_len + init_angles[5] + (start_angle - up_angle)/2 * cos(t * np.pi / 16) - (start_angle + up_angle)/2
+        ]
+        robot.direct_move_six(angle_list)
         time.sleep(0.01)
         t += 1
-
-        print(t)
 
 
 if __name__ == "__main__":
@@ -88,13 +85,16 @@ if __name__ == "__main__":
 
     h = 10
     c_h = 30
+    start_angle = 40
+    init_angles = np.array([32, 230, 232, 40, 20, 205])
     init_add_height = np.array([32 + h, 230 - h, 232 - h, 40 + h, 20 + h, 205 - h])
     height_list = np.array([c_h, -c_h, -c_h, c_h, c_h, -c_h])
+    
     my_biped = bipedal(init_a=init_add_height, center_height=height_list)
     my_biped.boot()
     
-    move_steps(step_len=0, steps=10, height=5)
-    move_steps(step_len=1, steps=10, height=8)
+    move_steps(robot=my_biped, step_len=0, steps=10, height=5)
+    move_steps(robot=my_biped, step_len=1, steps=10, height=8)
 
     my_biped.home()
 
