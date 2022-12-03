@@ -3,6 +3,7 @@ from math import sin, cos
 from lx16a import *
 import time
 import numpy as np
+import matplotlib.pyplot as plt
 
 # LX16A.initialize("/dev/cu.usbserial-2130", 0.1)
 LX16A.initialize("/dev/ttyUSB0", 0.1)
@@ -33,6 +34,7 @@ class bipedal():
         self.c_height = center_height
 
     def direct_move_six(self, new_a):
+        # check_tempture()
         for i in range(6):
             servo_list[i].move(new_a[i])
 
@@ -57,20 +59,30 @@ class bipedal():
         self.sin_move_six(self.init_angle, 20)
         print("home")
 
+def check_tempture():
+    for i in range(6):
+        temp_i = servo_list[i].get_temp()
+        print("motor %d : "%i, temp_i)
+        if temp_i > 80:
+            print("motor %d is too hot"%i)
+            exit()
+
 def move_steps(robot, step_len, steps, height):
+    # record = []
     t = 0
     up_angle = start_angle-height
     while t<16*steps:
-        angle_list = [
+        angle_list = np.array([
             sin(t * np.pi / 16) * step_len + init_angles[0] + (start_angle - up_angle)/2 * cos(t * np.pi / 16) + (start_angle + up_angle)/2,
             sin(t * np.pi / 16) * 0 + init_angles[1] - (start_angle - up_angle)/2 * cos(t * np.pi / 16) - (start_angle + up_angle)/2,
             sin(t * np.pi / 16) * step_len + init_angles[2] - (start_angle - up_angle)/2 * cos(t * np.pi / 16) - (start_angle + up_angle)/2,
             sin(t * np.pi / 16) * step_len + init_angles[3] - (start_angle - up_angle)/2 * cos(t * np.pi / 16) + (start_angle + up_angle)/2,
             sin(t * np.pi / 16) * 0 + init_angles[4] - (start_angle - up_angle)/2 * cos(t * np.pi / 16) + (start_angle + up_angle)/2,
             sin(t * np.pi / 16) * step_len + init_angles[5] + (start_angle - up_angle)/2 * cos(t * np.pi / 16) - (start_angle + up_angle)/2
-        ]
+        ])
         robot.direct_move_six(angle_list)
         time.sleep(0.01)
+        record.append(angle_list)
         t += 1
 
     end_pos = [
@@ -85,7 +97,9 @@ def move_steps(robot, step_len, steps, height):
     robot.direct_move_six(end_pos)
 
 
+
 if __name__ == "__main__":
+    record = []
     # move_steps(step_len=0, steps=10, height=5)
     # move_steps(step_len=1, steps=10, height=8)
     # move_steps(step_len=2, steps=10, height=10)
@@ -96,18 +110,30 @@ if __name__ == "__main__":
     h = 10
     c_h = 30
     start_angle = 40
-    init_angles = np.array([32, 230, 232, 40, 20, 205])
+
+    # 1 2 3 4 5 6
+    init_angles = np.array([37, 230, 232, 40, 28, 200])
     init_add_height = np.array([32 + h, 230 - h, 232 - h, 40 + h, 20 + h, 205 - h])
     height_list = np.array([c_h, -c_h, -c_h, c_h, c_h, -c_h])
 
     my_biped = bipedal(init_a=init_add_height, center_height=height_list)
     my_biped.boot()
     
-    move_steps(robot=my_biped, step_len=0, steps=10, height=5)
-    move_steps(robot=my_biped, step_len=1, steps=10, height=10)
-    move_steps(robot=my_biped, step_len=3, steps=20, height=15)
-    move_steps(robot=my_biped, step_len=1, steps=10, height=10)
-    move_steps(robot=my_biped, step_len=0, steps=10, height=5)
+    # move_steps(robot=my_biped, step_len=0, steps=10, height=5)
+    # move_steps(robot=my_biped, step_len=1, steps=10, height=10)
+    # move_steps(robot=my_biped, step_len=6, steps=100, height=10)
+    # move_steps(robot=my_biped, step_len=1, steps=10, height=10)
+    move_steps(robot=my_biped, step_len=0, steps=100, height=5)
+
+    record = np.array(record)
+    np.savetxt("record.csv", record)
+    print(record.shape)
+
+    # ax = plt.subplot()
+    # ax.plot(record[:, 0])
+    # plt.show()
+
+    
 
     my_biped.home()
 
